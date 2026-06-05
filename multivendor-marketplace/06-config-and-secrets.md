@@ -1,73 +1,99 @@
 # Chapter 6 — Configuration & secrets from the environment
 
-Your app boots (Chapter 4) and your services are up (Chapter 5), each reachable at a URL you named — `DATABASE_URL`, `REDIS_URL`. Now you wire those into the app *the production way*. This sounds like plumbing, but configuration done sloppily is where two of the most common production disasters start: a **secret leaked into Git**, and an app that **boots happily with broken settings** and then fails unpredictably at 3 a.m. We'll make both structurally impossible.
+Your app boots (Chapter 4) and your services are up (Chapter 5), each reachable at a URL you named — `DATABASE_URL`, `REDIS_URL`. The job now is to get those settings *into* your app the production way. It sounds like plumbing, but configuration done sloppily is where two of the most common production disasters begin: a **secret leaked into Git**, and an app that **boots happily with broken settings** and fails unpredictably hours later. In this chapter you'll walk into both problems on purpose, see why the obvious fixes fall short, and end with one small module that makes both disasters structurally impossible.
 
-## The point of this chapter
+We'll go step by step. Don't skip ahead to the final code — the point is to *feel* each problem before you fix it, because that's what makes the final shape obvious instead of arbitrary.
 
-One **typed, validated configuration module** that is the single source of truth for every setting. It reads everything from the **environment** (never hardcoded), **validates it at startup**, and **refuses to boot** with a clear error if anything required is missing or malformed. Secrets live in a git-ignored `.env`; a committed `.env.example` documents what's needed.
+## Where we're headed
 
-## Decision 1 — Where configuration lives: in the code, or in the environment?
+By the end you'll have **one typed, validated configuration module** that is the single source of truth for every setting. It reads everything from the **environment** (never hardcoded), **validates it at startup**, and **refuses to boot** with a clear error if anything required is missing or malformed. Secrets will live in a git-ignored `.env`; a committed `.env.example` will document what's needed. Let's build up to that one step at a time.
 
-The tempting approach is to put settings right where they're used:
+## Step 1 — Start the way everyone starts (and feel the first problem)
+
+You need a database connection and a secret for signing tokens later. The fastest thing that works is to write the values right where you use them:
 
 ```ts
-// ❌ the tempting version — config baked into the code
+// ❌ the tempting first version — config baked into the code
 const db = connect("postgresql://market:localdevpw@localhost:5432/marketplace");
 const jwtSecret = "super-secret-signing-key";
 ```
 
-It works on your laptop. Here's why it disappoints, structurally:
+Run it. It works on your laptop. So what's wrong?
 
-- **It leaks secrets.** That `jwtSecret` and database password are now in your source, and the moment you commit, they're in Git history forever — exactly the leak you've been guarding against since Chapter 4. (More on how fast that gets exploited below.)
-- **It can't change per environment.** Your laptop, a teammate's laptop, staging, and production all need *different* database URLs and secrets. Hardcoded values can't be all of those at once — you'd be editing source to deploy, which is how wrong values reach production.
+Two things, and both are quiet until they're catastrophic:
 
-The professional rule, drawn straight from the **Twelve-Factor App** methodology, is: **configuration lives in the environment, never in the code.** The same compiled app runs everywhere; only the environment around it changes. Your local values come from a `.env` file; production injects real values as actual environment variables.
+- **You just wrote a secret into your source.** The moment you commit, that database password and `jwtSecret` are in Git history *forever* — exactly the leak you've been guarding against since Chapter 4. Deleting the line later doesn't help; history remembers. (We'll see below how fast that gets exploited in the wild.)
+- **These values can't change per environment.** Your laptop, a teammate's laptop, staging, and production each need *different* URLs and secrets. A hardcoded string can only be one of them. To deploy, you'd be editing source code — which is precisely how a staging password ends up pointed at the production database.
 
-## Decision 2 — Reading `process.env` is not enough
+So hardcoding is out. The values have to come from *outside* the code. That outside place has a standard name: the **environment**.
 
-So config comes from `process.env`. The tempting next step is to read it directly, wherever you need it:
+> The principle here isn't ad-hoc — it's the **Twelve-Factor App** rule: *configuration lives in the environment, never in the code.* The same compiled app runs everywhere; only the environment around it changes.
+
+## Step 2 — Move it to the environment (and feel the second problem)
+
+Node exposes the environment as `process.env`. So the natural next move is to read your values from there, wherever you happen to need them:
 
 ```ts
-// ❌ scattered, untyped, unvalidated
-const port = process.env.PORT;            // a string | undefined — NOT a number
-const dbUrl = process.env.DATABASE_URL;   // could be undefined; you find out when it's used
-// …repeated in twenty files, each a place a typo or a missing var hides until runtime
+// ❌ better — but scattered, untyped, unvalidated
+const port = process.env.PORT;            // the string "3000" — NOT the number 3000
+const dbUrl = process.env.DATABASE_URL;   // might be undefined; you find out when it's used
+const jwtSecret = process.env.JWT_SECRET; // …and this same pattern, repeated in twenty files
 ```
 
-Three quiet problems, every one of which bites in production:
+No more hardcoded secrets — real progress. But run this in anger and three new problems surface, every one of which bites in *production*, not on your laptop:
 
-- **Everything is a string — or undefined.** `process.env.PORT` is the string `"3000"`, not the number `3000`; `process.env.DATABASE_URL` might be `undefined`. TypeScript can't save you here (remember Chapter 3 — types are erased), so unparsed, unchecked env values spread bad data through your app.
-- **No validation, no early warning.** Forget to set `JWT_SECRET` and nothing complains at boot — your app starts *fine* and then either crashes deep inside a request or, worse, runs **insecurely**. The failure happens far from the cause.
-- **No single source of truth.** Twenty scattered `process.env` reads mean twenty places to typo a key, twenty places with no default, and no one file that answers "what config does this app need?"
+- **Everything is a string, or undefined.** `process.env.PORT` is the string `"3000"`, not the number `3000`. `process.env.DATABASE_URL` could be `undefined`. And TypeScript can't catch it — remember Chapter 3, the types are erased at runtime, so TS *believes* these are strings even when they're missing. Unparsed, unchecked values spread bad data through your app.
+- **Nothing warns you when a value is missing.** Forget to set `JWT_SECRET` and nothing complains at boot. The app starts *fine* — then crashes deep inside a request, or worse, runs **insecurely**. The failure happens far away from its cause, at the worst possible time.
+- **There's no single source of truth.** Twenty scattered `process.env` reads mean twenty places to typo a key, twenty places with no default, and not one file that answers the question "what configuration does this app even need?"
 
-## The right approach — one validated config module that fails fast
+The environment was the right *source*. Reading it ad-hoc, all over the app, is the wrong *method*. Let's fix the method.
 
-Centralise it. Have **exactly one module** read `process.env`, validate the whole thing against a schema at startup, coerce types, and export a clean, typed config object. Everything else in the app imports *that* and never touches `process.env` again. With zod (your validation library from Chapter 3), the shape is:
+## Step 3 — The right approach: one validated module that fails fast
+
+Here's the decision, stated plainly: **exactly one module** reads `process.env`. It validates the whole environment against a schema *at startup*, coerces strings into the right types, and exports a clean, typed `config` object. Everything else in the app imports that object and never touches `process.env` again.
+
+Three properties make this work, and we'll add them one at a time:
+
+1. **Validate** — check every value up front, so a missing or malformed setting is caught immediately.
+2. **Fail fast** — if validation fails, the app *refuses to boot*, loudly, pointing at the exact problem.
+3. **Type & coerce** — turn `"3000"` into `3000` once, here, so the rest of the app gets real types.
+
+You already have the tool for the validation: **zod**, your validation library from Chapter 3. (If it isn't installed yet, add it now:)
+
+```bash
+npm install zod
+```
+
+Now write the module. Read it top to bottom — each part maps to one of the three properties above:
 
 ```ts
-// src/shared/config.ts — the ONLY place that reads process.env
+// src/shared/config.ts — the ONLY place in the app that reads process.env
 import { z } from 'zod';
 
+// (1) VALIDATE — declare every variable the app needs, and its rules.
 const EnvSchema = z.object({
   NODE_ENV:     z.enum(['development', 'test', 'production']).default('development'),
-  PORT:         z.coerce.number().int().positive().default(3000),  // string "3000" → number 3000
+  PORT:         z.coerce.number().int().positive().default(3000),  // (3) COERCE: "3000" → 3000
   DATABASE_URL: z.string().url(),                                  // required; secrets get no default
   REDIS_URL:    z.string().url(),
   JWT_SECRET:   z.string().min(32),                               // required AND long enough to be safe
 });
 
-// Validate the WHOLE environment once, at startup. If it's wrong, crash HERE — on purpose.
+// Validate the WHOLE environment once, here, at startup.
 const parsed = EnvSchema.safeParse(process.env);
+
+// (2) FAIL FAST — if anything is missing or malformed, crash NOW, on purpose.
 if (!parsed.success) {
-  // log which keys are missing/invalid (the keys and the problem — never the values), then exit
+  // log the keys and the problem — NEVER the values — then exit
   console.error('✖ Invalid environment configuration', parsed.error.flatten().fieldErrors);
   process.exit(1);
 }
 
-export const config = parsed.data;   // typed, validated — the rest of the app imports THIS
+// Typed, validated, guaranteed-present. The rest of the app imports THIS.
+export const config = parsed.data;
 ```
 
-Read what this buys you. **`z.coerce.number()`** turns the string into a real number. **`.url()` and `.min(32)`** reject a malformed database URL or a too-short signing secret. And the `safeParse` + `process.exit(1)` is the most important habit in the whole chapter: **fail fast.** If the config is wrong, the app *refuses to start*, loudly, pointing at the exact problem:
+That's the whole module. Look at what each rule earns you: `z.coerce.number()` hands you a real number instead of a string; `.url()` rejects a malformed database URL; `.min(32)` rejects a signing secret too short to be safe. And the `safeParse` + `process.exit(1)` is the single most important habit in this chapter — **fail fast**. If the config is wrong, the app doesn't limp along; it stops at the door and tells you exactly what's wrong:
 
 ```
 $ npm run dev
@@ -78,7 +104,11 @@ $ npm run dev
 # app exits — fix your .env and try again
 ```
 
-A noisy crash at boot, in front of *you*, is infinitely better than a quiet misconfiguration that surfaces as a weird bug for a customer later. Everywhere else, config is now typed and guaranteed:
+A noisy crash at boot, in front of *you*, beats a quiet misconfiguration that surfaces as a customer's weird bug three hours later. Every time.
+
+## Step 4 — Use the config everywhere else
+
+With the module in place, the rest of the app gets the easy life. Import `config` and use typed, guaranteed values — no parsing, no `undefined` checks, no `process.env`:
 
 ```ts
 // ✅ everywhere else in the app
@@ -100,13 +130,13 @@ import { config } from './config';
 export const redis = new Redis(config.REDIS_URL);
 ```
 
-The rest of the app imports `db` and `redis` from here — one connection, configured once, validated at the door.
+The rest of the app imports `db` and `redis` from here — one connection each, configured once, validated at the door.
 
-> 💡 **Hint — the rule that keeps this clean.** Make one rule for yourself and never break it: **only `config.ts` may read `process.env`.** If you ever find `process.env` anywhere else, that's a leak in the dam — route it through the config module. (A lint rule can even enforce this for you.)
+> 💡 **Hint — the one rule that keeps this clean.** Make yourself a rule and never break it: **only `config.ts` may read `process.env`.** If you ever spot `process.env` anywhere else, treat it as a crack in the dam and route it through the config module. (A lint rule can even enforce this for you.)
 
-## The two files: `.env` and `.env.example`
+## Step 5 — Supply the values: `.env` and `.env.example`
 
-Your **`.env`** holds your real local values and is **git-ignored** (you added it to `.gitignore` in Chapter 4):
+The schema *demands* values — so where do they come from in development? From a **`.env`** file at your project root, holding your real local values. It is **git-ignored** (you added it to `.gitignore` in Chapter 4), so it never reaches Git:
 
 ```bash
 # .env  — your real local values, NEVER committed
@@ -117,7 +147,7 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=a-long-random-string-of-at-least-32-characters-xxxxxxxx
 ```
 
-Don't *invent* that `JWT_SECRET` by mashing the keyboard — a signing secret's entire job is to be unguessable, so generate real randomness:
+Don't *invent* that `JWT_SECRET` by mashing the keyboard — a signing secret's whole job is to be unguessable, so generate real randomness:
 
 ```bash
 openssl rand -base64 48
@@ -125,7 +155,7 @@ openssl rand -base64 48
 node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 ```
 
-But a git-ignored file is invisible to teammates — so you also commit **`.env.example`**: the same keys with **placeholder** values and no real secrets. It's the *contract* that tells anyone cloning the repo exactly what to set:
+But a git-ignored file is invisible to your teammates — clone the repo and there's no `.env`, so the app won't boot. The fix is a second file you *do* commit: **`.env.example`**, the same keys with **placeholder** values and no real secrets. It's the *contract* that tells anyone cloning the repo exactly what to set:
 
 ```bash
 # .env.example  — committed; keys + placeholders, no real secrets
@@ -136,11 +166,17 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=set-me-to-a-long-random-string-min-32-chars
 ```
 
-In **development**, load `.env` into `process.env` at startup (via your framework's support or a small loader). In **production**, you do *not* ship a `.env` file — the platform injects the real values as actual environment variables, and your same config module validates them identically. (If a secret ever does slip into Git, deleting it isn't enough — it's in the history, so you must **rotate** it: change the secret at its source.)
+One more step to make the `.env` actually load: in **development**, its contents need to reach `process.env` before your config module reads them. Either use your framework/runtime's built-in support (e.g. Node's `--env-file=.env` flag in your `dev` script) or a tiny loader library — pick one, wire it into the `dev` script you wrote in Chapter 4.
 
-> **📖 Mandatory read — before Chapter 7.** Read the **Twelve-Factor App** chapter on **Config** (search: *"twelve factor app config"*), and skim your validation library's docs on parsing/coercing environment variables. *Required: the rest of the course assumes config flows through one validated module; understand the principle, not just the snippet.*
+## Step 6 — How production differs (and what to do if a secret leaks)
 
-> **Interesting to read.** Committed credentials get found *fast* — GitHub runs **secret scanning** that detects them and can notify providers to auto-revoke them, often within minutes of a push. Search *"GitHub secret scanning"*. The fact that this service has to exist at industrial scale tells you how routine — and how exploited — the mistake is.
+You do **not** ship a `.env` file to production. Instead the platform injects the real values as actual environment variables, and your *same* config module validates them identically — dev, staging, and production all run the one schema; only the values differ. That's the payoff of centralising: there is exactly one place that defines what valid configuration means, and it guards every environment the same way.
+
+And if a secret ever does slip into Git despite all this? Deleting the line is **not** enough — it's in the history, and history is forever. You must **rotate** it: change the secret at its source (issue a new database password, a new signing key) so the leaked value becomes worthless. Treat a leaked secret as already-compromised, every time.
+
+> **📖 Mandatory read — before Chapter 7.** Read the **Twelve-Factor App** chapter on **Config** (search: *"twelve factor app config"*), and skim your validation library's docs on parsing/coercing environment variables. *Required: the rest of the course assumes config flows through one validated module — understand the principle, not just the snippet.*
+
+> **Interesting to read.** Committed credentials get found *fast*. GitHub runs **secret scanning** that detects them automatically and can notify the provider to auto-revoke them, often within minutes of a push. Search *"GitHub secret scanning"*. The fact that this service has to exist at industrial scale tells you how routine — and how exploited — the mistake is.
 
 ## Definition of Done
 
@@ -151,7 +187,7 @@ Things you can **see or run** — and the gate to Chapter 7:
 - [ ] Types are coerced (e.g. `PORT` is a **number**, not a string) and constraints enforced (e.g. `JWT_SECRET` length)
 - [ ] **Nothing outside `config.ts` reads `process.env`** directly — the app uses `config.*`
 - [ ] `DATABASE_URL` and `REDIS_URL` flow through config, and the app connects to the Docker services using them
-- [ ] `.env` is git-ignored; **`.env.example`** is committed with keys and placeholders (no real secrets)
+- [ ] `.env` is git-ignored and loaded in development; **`.env.example`** is committed with keys and placeholders (no real secrets)
 - [ ] No secret is in the source or in Git history
 
 > **✍️ Log it (mandatory).** In `learning-log/06-config-and-secrets.md`: (1) Why does configuration belong in the environment rather than in code — give the two failures it prevents. (2) Why validate config and **fail fast at startup** instead of reading `process.env` where you need it? Describe the bad outcome fail-fast avoids. (3) What is `.env.example` *for*, and why is it safe to commit when `.env` is not?
