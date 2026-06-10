@@ -4,7 +4,7 @@
 >
 > **The first principle — don't empty the bucket on the desk.** A guide reveals the build *one step at a time*, in the order a working developer actually meets each problem. It reads like a story, not a spec sheet handed over all at once. Each chapter opens a small question, lays out the tempting-but-wrong approach and *why it falls short*, then explains the approach a professional reaches for and *why it wins* — and the mentee builds **that** one, understanding both. They never have to ship the broken version to learn why it's broken; the explanation, given in real depth, *is* the teaching.
 >
-> **It's a guide, not a brief.** The mentee lives inside this for weeks, so it carries more than features. A working rhythm they're reminded of as they go. The occasional true story about how a real team solved the same problem, dropped in just to read. A nudge, here and there, to write up what they've learned under their own name. A brief lists what to build; a guide makes someone *want* to build it — and able to explain it afterwards.
+> **It's a guide, not a brief — and not a textbook.** The mentee lives inside this for weeks, so it carries more than features. A working rhythm they're reminded of as they go. The occasional true story about how a real team solved the same problem, dropped in just to read. A nudge, here and there, to write up what they've learned under their own name. A brief lists what to build; a guide makes someone *want* to build it — and able to explain it afterwards. **A guide that teaches normalization and RBAC but never walks the mentee through folder structure, file creation, and a demoable screen at every phase has failed** — concepts serve the project (Rule 28), they don't replace it.
 >
 > **The test on every page of every guide you ship:** *Is the mentee doing the thinking, or is the guide doing it for them?* If the page thinks for them, it failed.
 
@@ -19,7 +19,8 @@
 | Use AI to author a course (what it must ask you first) | §3 — Notes for an AI authoring a course |
 | Write the mentee-facing guide | Part III |
 | Lay the course out as phases, chapters, and sub-chapters | Part III §7 |
-| Scaffold the actual project build (folders, files, steps) | §9 beat 6 "Build it" and Rule 25 |
+| Scaffold the actual project build (folders, files, steps) | §9 beat 6 "Build it", Rule 25, and §7.5 |
+| Keep concept teaching from replacing project completion | Rule 28 and §7.6 |
 | Write engaging, intuitive chapter stories | Part III §9 and Part IV |
 | Scale the course and order it zero → advanced | Rules 19–21 and §15 (the complexity ladder) |
 | Check a draft before publishing | Part VI |
@@ -35,7 +36,7 @@ Everything marked **mentor only** — the competency map, the personalisation me
 
 **Tutorial hell** is finishing tutorial after tutorial and still not being able to build anything alone, because all you ever did was copy.
 
-A good guide breaks that by changing **who decides** and by *explaining deeply*. You supply the structure, the requirements, the reason each feature exists, and a full account of the choices hidden inside it — the tempting-but-wrong approach and exactly why it disappoints, the right approach and exactly why it's worth the effort. The mentee reads it, understands both sides, weighs them in their own words, and then builds the right version with their eyes open. **The understanding is the curriculum** — not a struggle through a broken build, but a real grasp of *why* the professional choice is the professional choice.
+A good guide breaks that by changing **who decides** and by *explaining deeply* — **and by keeping the mentee's repo moving toward a finished product the whole way.** You supply the structure, the requirements, the reason each feature exists, and a full account of the choices hidden inside it — the tempting-but-wrong approach and exactly why it disappoints, the right approach and exactly why it's worth the effort. The mentee reads it, understands both sides, weighs them in their own words, and then builds the right version with their eyes open. **The understanding is the curriculum** — not a struggle through a broken build, but a real grasp of *why* the professional choice is the professional choice. **The deliverable is still the app** — concepts exist to make that app correct, secure, and fast; a course that only produces explanations has failed (Rule 28).
 
 This is the deliberate change from "problem-first" teaching, where the mentee builds the naive version and feels it break. That wastes their time on code they'll throw away and teaches by frustration. Instead you *teach the contrast*: show the weak approach, dissect why it fails (with the concrete numbers — the query count, the bloated row, the leaked field), then show and justify the right one. They learn the same lesson, faster and without the detour, and they build only the version worth keeping.
 
@@ -80,6 +81,7 @@ Read these once and keep them in the back of your mind while you write.
 | 25 | **Scaffold the build — guide the hands, withhold the answer.** Explaining a topic is *not enough*; the mentee must be guided to *do it on the project*, concretely. Name the **exact folder and file to create**, the **table and column to add the index to**, the **component to build**, the **library to choose** (with the options weighed — *"you need to hold front-end state: Redux Toolkit vs Context — here's the trade-off"*). Sequence the actions (*"first the migration, run it; then the route; then the schema; then test with this request"*), give **hints** at the tricky parts, and tell them **how to verify** it worked. The *only* thing you never hand over is the **solution code** the mentee is there to write (Rule 2). "Teach the topic" was the old bar; "guide them to build it, step by step" is the bar. This is the single most important fix: the connection from *learning* to *a working project* must be explicit. |
 | 26 | **Be intuitive and human — product-shaped, not a spec sheet.** Learners stay when a course feels like a person guiding them. Open chapters with motivation, a short real story, or a quote; keep the human side present throughout — never lose it. And name things the way a **product** would, not a system diagram: *"Create product"*, *"Admin dashboard"*, *"the vendor's shop"* — **not** "the product-creation endpoint" or "dashboard page component". Intuitive framing isn't decoration; it's what makes a hard topic approachable and a long course worth finishing. |
 | 27 | **Guide the build in basic steps, and say what NOT to do.** The hands-on part of a chapter is not one "now build it" sub-chapter — it's **many tiny, sequenced sub-chapters**, each a single concrete action: *"create `src/modules/auth/`"* → *"create `auth.routes.ts` inside it"* → *"write the register handler — here's exactly what it must do"* → *"wire it into the app"* → *"test it with this request"*. Go **basic**: name the folder, the file, where it sits, what each must do — the mentee should never wonder *what to do next*, only *how to write the logic* (which they write themselves — Rule 2). At each step give explicit **✅ do this / ❌ don't do this** guidance — the mistakes to avoid teach as much as the steps to take. And every build sub-chapter **continues the project from its current state** (Rule 23): *"you now have working login; next we add refresh tokens — here's where they slot in."* This step-by-step, basic, do-and-don't guidance is the difference between a course that *explains* a project and one that *gets it built*. |
+| 28 | **Concepts serve the project — never replace it.** A course that explains normalization, RBAC, and caching beautifully but never walks the mentee through folder structure, file creation, wiring, and a demoable feature at every stage has failed its primary job: **the mentee ships a working app.** Teach concepts in depth (Rule 17), but **between** build steps or **right after** the mentee has built the thing the concept names — not instead of building. No run of three or more chapters in a row that add no runnable piece of the product. A concept chapter still applies the idea to the real repo (Rule 23), but "write a matrix in `docs/`" alone is not enough if the app itself hasn't moved. The test at course level: at every phase boundary, can the mentee **run and demo** something new — a health check, a login screen, a vendor adding a product, a checkout — not just explain a textbook topic? |
 
 ---
 
@@ -109,6 +111,7 @@ Do these in order:
    - **each chapter is a feature area broken into 20–30 sub-chapters** following the arc — set the scene → learn it → reading → build it (in basic steps) → checklist — not one undivided wall (Rules 4, 24, §7);
    - **a Build it cluster of many tiny steps** that scaffolds the project — name the folders/files to create, the table/column, the library to choose; one step per sub-chapter; ✅do/❌don't at each; continuity ("you have X, now add Y"); how to verify — all without handing over the solution code (Rules 25, 27, §9.6). This is the part most drafts get wrong: they teach but don't *guide the build*;
    - **intuitive, human, product-shaped** framing and names throughout (Rule 26);
+   - **project skeleton early**, then **backend/frontend paired** per feature — concepts never replace build steps (Rules 28, §7.5–7.6);
    - a Definition of Done (or Key takeaways) at the end of every chapter.
 
    You don't need a clever prompt. Point the AI at this manual and hold the line — but **first have it ask you the questions below** so it isn't guessing the difficulty, stack, or domain.
@@ -140,7 +143,7 @@ If you are an AI helping a mentor write a course from this manual, **do not star
 
 5. **What the mentee already knows.** Ask what to assume, so the prerequisites are pitched to the level and never re-teach the basics (§8).
 
-Once you have the answers: write the **competency map (§4)** for yourself, then propose the **course outline grouped into phases → feature-chapters** (mindset → project → the build) and **confirm it with the mentor before writing any chapter**. Then write the **`01-introduction/` chapter first**, and proceed **chapter by chapter, pausing for review** — each chapter broken into its 20–30 sub-chapters (§7), with a real **Build it** cluster of basic steps (§9.6). If the mentor hasn't told you the difficulty, stack, or domain — *ask*, don't invent.
+Once you have the answers: write the **competency map (§4)** for yourself, then propose the **course outline grouped into phases → feature-chapters** (mindset → project → the build) and **confirm it with the mentor before writing any chapter**. The outline must include an early **project skeleton chapter** (§7.5) and **paired backend/frontend chapters** per feature (§7.6) — not a long stretch of concept-only chapters before the repo runs. Then write the **`01-introduction/` chapter first**, and proceed **chapter by chapter, pausing for review** — each chapter broken into its 20–30 sub-chapters (§7), with a real **Build it** cluster of basic steps (§9.6) that is the **largest block** in feature chapters. If the mentor hasn't told you the difficulty, stack, or domain — *ask*, don't invent.
 
 ## 4. The competency map *(mentor only — write it first)*
 
@@ -211,6 +214,9 @@ Most first drafts — whether you or an AI wrote them — fail in the same few w
 | **A "chapter" is one tiny topic** (e.g. "password hashing" alone) | A chapter is a **whole feature area** (Authentication); that topic is a *sub-chapter* inside it (Rule 4). |
 | **Dry, technical names** ("dashboard page component", "the product POST handler") | Rename to be **intuitive and product-shaped** (Rule 26): "Admin dashboard", "Create product". |
 | **Cold, all-business chapters with no human side** | Open with motivation, a real story, or a quote; keep the human voice present (Rule 26). |
+| **Concept chapters stacked back-to-back** — normalization, then RBAC, then threat model, with nothing runnable added | Reorder: **project skeleton first** (§7.5), then build; teach each concept **adjacent to** the feature it names (Rule 28). Cap concept-only chapters at **one in a row** unless the next chapter immediately implements what the concept introduced. |
+| **Backend built, frontend missing for half the course** | **Pair server and client chapters** per feature (§7.6). Every phase ends with something **demoable in the browser**, not only in Postman. |
+| **Concept chapter ends with only a doc or learning log** — no change to the running app | Add applied repo work that **moves the product**: stub the route, run the migration, seed and query, wire a placeholder screen — something the mentee can run (Rule 23, 28). |
 
 Work through it one chapter at a time: fix a chapter, re-read it to check the fix, then move on to the next.
 
@@ -248,7 +254,7 @@ Each chapter is then broken into **20–30 sub-chapters** (Rule 24) — the smal
 | **Build it in basic steps (≈10–14)** | *Where the project is now* — a continuity recap + what we add · *Scaffold* — **create these folders and files; here's how the structure looks** · then **one sub-chapter per build step** (create this file → write this logic → wire it → test it…), each: continues from the prior step (Rule 23), is **spec-not-code** (Rule 2), names exactly *what to do next* (Rule 27), carries **✅ do / ❌ don't** guidance and a **hint**, and ends with **how to verify it works**. |
 | **Wrap (≈2–3)** | *Practice / stretch* (optional) · *Recap & what's next* · *Checklist & learning log* — the **Definition of Done** (or **Key takeaways**) **gate** (§11). |
 
-That arc naturally yields **20–30 sub-chapters** for a real feature; a pure **concept chapter** (e.g. "Why this database?") skips most of *Build it* and runs much shorter. **The arc is a navigation skeleton, not a label-stamped form** (Rule 15): the *prose inside* each sub-chapter still flows as a story, and you don't print the cluster names as headings on the mentee's page — they're how *you* structure the chapter, not a worksheet you stamp on them.
+That arc naturally yields **20–30 sub-chapters** for a real feature; a pure **concept chapter** (e.g. "Why this database?") runs shorter on *Build it* but still includes **applied project work** (Rule 23) — never "read only." **The Build it cluster must be the largest block** in every chapter that ships a feature: roughly half or more of the sub-chapters. If *Learn it* dominates and *Build it* is one page, the chapter will teach a topic without completing the product (Rule 28). **The arc is a navigation skeleton, not a label-stamped form** (Rule 15): the *prose inside* each sub-chapter still flows as a story, and you don't print the cluster names as headings on the mentee's page — they're how *you* structure the chapter, not a worksheet you stamp on them.
 
 > **A note on quizzes (excluded for now).** Each chapter (the *Check* cluster) and each phase has a natural place for quizzes/assessments. **Leave them out for now** — they belong to the future interactive platform where learners submit answers and run code. Leave the quiz sub-chapter as an empty placeholder so the structure is visible, or omit it. Until quizzes exist, the **learning-log questions** (§11) carry the "make them think" load.
 
@@ -325,6 +331,33 @@ phases of chapters/     → the build, one feature-chapter at a time; each chapt
 
 Each chapter's final **checklist gates the next chapter** (§11); each phase is a milestone the mentee can feel themselves reach.
 
+### The mandatory project skeleton (early — before deep concepts)
+
+The most common way a course fails is also the easiest to prevent: **the mentee reads about RBAC and normalization for a week while their repo is still empty.** Fix that with a dedicated early chapter — usually the first or second *build* chapter after the intro — whose only job is to **stand the project up on disk** so every later chapter has somewhere concrete to attach.
+
+This chapter is not optional for a full-stack project. It must cover, in order:
+
+1. **What you're creating** — one repo (or two, if you mandate separate repos), with **`server/`** and **`client/`** (or your stack's equivalent) named plainly. Show the **tree** before any logic: the mentee should *see* the shape of the app before filling it in.
+2. **Why the structure matters** — compare the two folder philosophies (layer-based vs feature/module-based) with pros and cons, **mandate one for the course** (§9), and say why changing it later breaks every subsequent chapter.
+3. **Server-side scaffold** — create the backend entry files (`server.ts`, `app.ts`, config, shared `db` client), wire a health route, run it, verify `200`. Name every folder and file; explain what each *will* hold, even if it's empty today.
+4. **Client-side scaffold** — create the frontend app (Vite/CRA/your choice), set the **folder convention** (e.g. `src/pages/`, `src/components/`, `src/api/`, `src/store/`), add routing shell and a placeholder home page, run it, verify it loads.
+5. **Client vs server — taught here, not in the abstract** — one short, concrete explanation woven into the scaffold: the browser runs the client; the server runs the API; they talk over HTTP; env vars live on the server; the client never holds secrets. Point at *their* two folders while explaining — not a generic diagram alone.
+6. **Connect them** — configure the client's API base URL, call `GET /health` from the client (even a one-line `fetch` in `useEffect`), show the response in the UI. **That's the first end-to-end demo** — and it gates everything after.
+
+Each of the above is its own sub-chapter (Rule 27): create the folder → create the file → explain why → wire → verify. The mentee finishes this chapter with **both apps running**, a visible folder tree they can navigate, and a checklist that proves it.
+
+> **✅ Do:** show the full tree after each scaffold step so the repo always has a readable shape. **❌ Don't:** skip the client until "Week 3" — a backend-only course for weeks teaches concepts *about* a product the mentee has never seen run in a browser.
+
+### The completion thread — backend and frontend stay paired
+
+A marketplace (or any full-stack app) is not complete until **both** sides exist. The course outline must make that explicit:
+
+- **Interleave, don't orphan.** When a feature has an API and a UI (auth, vendor dashboard, catalogue, cart, checkout), place the **client chapter immediately after** the **server chapter** for the same feature — or split one chapter into backend build steps then frontend build steps. Don't stack five backend or concept chapters while the frontend still shows a blank page.
+- **Demoable at every phase.** At the end of each week/phase, state what the mentee can **run and show**: Week 1 ends with health check + folder tree; after auth, a login screen that returns a token; after products, a vendor form that creates a row in the database; after checkout, an order in the UI *and* in the database. If the phase ends in "you can explain normalization," the phase failed.
+- **Concept chapters come after the build they explain.** Teach normalization *after* the mentee has built normalized tables and hit a snapshot decision — not as a three-page essay before they've created `products`. Teach RBAC *immediately before* the middleware chapter that implements it — not three chapters before with only a `docs/` matrix. The concept earns its place by naming something they already built or are about to build *in the next sub-chapter*.
+
+The test for the whole course: **could someone clone the mentee's repo at the final checklist and use the app?** If the answer is "they could pass a viva but the checkout page doesn't exist," the guide taught topics, not a project.
+
 ## 8. The opening sections (the first chapter, `01-introduction/`)
 
 The course opens with an introduction chapter — the folder **`01-introduction/`** (Phase 1: *mindset + the project*). It orients the mentee before they build, and it does one job most guides skip: it tells them **how to use the course and how progress is gated**. Its parts below map to the intro's sub-chapter files (`01.1-…`, `01.2-…`); on a small course they can be headings in one file, but the order and the arc stay the same.
@@ -381,8 +414,9 @@ The mentee's roadmap and table of contents — the **feature-chapters** in order
 
 | # | Chapter | Done when… |
 |---|---------|-----------|
-| 2 | [Why a relational database?](02-why-relational.md) | Can explain why relational fits this project, and the trade-offs |
-| 3 | [Project setup & config](03-project-setup-and-config.md) | Boots from validated env config; no secret in Git |
+| 2 | [Project skeleton — server, client, first connection](02-project-skeleton.md) | Both apps run; folder tree in place; client calls `GET /health` and shows the result |
+| 3 | [Why a relational database?](03-why-relational.md) | Can explain why relational fits this project, and the trade-offs |
+| 4 | [Project setup & config](04-project-setup-and-config.md) | Boots from validated env config; no secret in Git |
 | … | … | … |
 
 (The intro is chapter 1, so the build chapters start at 2.) Keep the app demoable as you go: when a feature spans a backend and a frontend chapter, place them next to each other.
@@ -397,7 +431,7 @@ Each **chapter** is read start to finish, like a chapter of a technical book —
 
 **Chapters come in a few types, and the beats flex to fit (§7):**
 
-- A **decision / concept chapter** ("Why MongoDB?", "What is Mongoose?") is mostly beats 1, 3, 4, 5 — context, the options compared, the concept taught in depth, reading. It ends in **Key takeaways** instead of a Definition of Done. It usually has no *feature* to build — but it must still **connect to the project** (Rule 23): give the mentee concrete applied work on their *real* codebase — audit their own schema against the concept, run a query against their seeded data to *see* the trade-off, or stub the route the next chapter will flesh out. A concept chapter teaches a "why," but the mentee should still *do* something to their project with it, not just read.
+- A **decision / concept chapter** ("Why MongoDB?", "What is Mongoose?") is mostly beats 1, 3, 4, 5 — context, the options compared, the concept taught in depth, reading. It ends in **Key takeaways** instead of a Definition of Done. It usually has no *new feature* to ship — but it must still **connect to the project** (Rule 23) and **must not block project progress** (Rule 28): give the mentee concrete applied work on their *real* codebase — audit their own schema against the concept, run a query against their seeded data to *see* the trade-off, stub the route the *next* chapter implements, or add the migration the next chapter runs. A concept chapter teaches a "why," but the mentee should still *do* something runnable or repo-visible with it — not just read and write a learning log. **Schedule concept chapters after the build they explain, or immediately before the build that implements them** — never as a long runway of essays while the app stands still (§7.6).
 - A **setup or build chapter** ("Set up Mongoose", "Backend: the auth API") uses the full flow and ends in a **Definition of Done**.
 - A **frontend/layer chapter** focuses on its slice (the screen, the API) and ends in a Definition of Done for that slice.
 
@@ -631,6 +665,7 @@ The canonical marketplace example, taught this way: storing **only `product_id`*
 
 A good course goes **from zero to the project's ceiling**, one rung at a time (Rule 20). It doesn't open with the hard stuff — it earns it. The early chapters get the project standing and safe; each later rung adds one more layer of real-world concern. A typical climb:
 
+0. **Stand the project on disk** — repo, `server/` + `client/` folder trees, both apps boot, first health check from browser to API (§7.5). *Nothing else until this is done.*
 1. **Get it running** — project setup, configuration from the environment, a health check.
 2. **Make input safe** — request validation, sane error handling and status codes. (TypeScript here too, if the stack uses it.)
 3. **Model and build the core** — the data model, then the core features as clean, correct CRUD.
@@ -727,6 +762,9 @@ Mentees may use Cursor, Copilot, and the rest — the guide doesn't ban AI. Eval
 - [ ] A **chapter is a feature area** (~12–18 total), broken into **20–30 sub-chapters** following the arc (set the scene → learn it → reading → build it in basic steps → checklist), not one undivided wall (Rules 4, 19, 24)
 - [ ] The **Build it** cluster is **many tiny steps** (scaffold → write → wire → test), each with **✅do/❌don't** and a continuity recap (Rule 27)
 - [ ] Chapters, sub-chapters, and features are named **intuitively and product-shaped** ("Create product", "Admin dashboard"), never dry/technical or vague ("Module 4", "dashboard component") (Rules 5, 26)
+- [ ] **Project skeleton chapter** exists early (§7.5): `server/` + `client/` trees, both apps run, client hits health API
+- [ ] **Backend and frontend chapters paired** per feature where both exist; each phase ends with something **demoable** (§7.6)
+- [ ] **No run of 3+ concept-only chapters** without a runnable build step between them (Rule 28)
 - [ ] Intro chapter order: Introduction → **How to use this course (the checklist gate)** → The project, then actors → In/Out of scope → Prerequisites → Course outline → Working rhythm
 - [ ] Headings sit on their own line (not bold lead-ins buried in paragraphs)
 - [ ] Introduction short; no fear spam
@@ -782,6 +820,8 @@ Mentees may use Cursor, Copilot, and the rest — the guide doesn't ban AI. Eval
 
 **Teaches but doesn't build? (the big one)** The chapter explains the topic well but never **guides the mentee to do it on the project** — no folder/file named, no "add the index to *this* table", no "choose *this* state library", no order of steps, no way to verify. The connection from *learning* to *a working project* is missing (Rules 25, 27, §9.6). This is the most common and most damaging failure: good content that doesn't ship a project.
 
+**Concept course, empty product? (Rule 28)** The guide teaches normalization, RBAC, threat models, and caching in depth, but the mentee's repo has no client, no checkout, or no demoable feature for half the course · three or more chapters in a row add only docs/learning-log work · concept chapters appear *before* the feature they describe instead of after or adjacent to implementation (§7.6). The mentee could pass a viva on definitions but cannot **run the app** — wrong balance.
+
 **Build too coarse or disconnected?** The hands-on is one giant "now build the feature" step instead of **many tiny sub-chapters** (Rule 27) · no **✅ do / ❌ don't** at the steps, only the happy path · steps that read as if the project started fresh instead of **continuing from its current state** (Rules 23, 27). Basic, sequenced, connected — or it doesn't get built.
 
 **Dry and lifeless?** Cold, all-business chapters with no human side · technical names ("the product POST handler") instead of intuitive ones ("Create product") · no motivation or story to make the mentee *want* to build it (Rule 26).
@@ -824,6 +864,7 @@ Use these inline in your guides; this appendix is your backstop.
 | **Definition of Done** | Tickable, observable outcomes that close a build/setup chapter. |
 | **Key takeaways** | The "you can now explain…" bullets that close a decision/concept chapter. |
 | **Teaching by contrast** | Explain the weak approach and why it fails, then the right one and why — and build only the right one. |
+| **Project skeleton** | The early chapter that creates `server/` + `client/` folder trees, boots both apps, and connects them — before deep concepts. |
 | **Tutorial hell** | Copy-only learning that never teaches the decisions. |
 
 ---
@@ -838,9 +879,12 @@ While drafting, make sure each chapter has:
 - [ ] The concept genuinely taught inline — enough to learn from, not just a name and a link
 - [ ] Reading woven in where concepts arrive (explained first, linked second)
 - [ ] A behaviour spec + a **Definition of Done** (build/setup chapters), or **Key takeaways** (concept chapters)
+- [ ] Concept chapters scheduled **after or adjacent to** the build they explain — not a long runway before the repo moves (Rule 28, §7.6)
+- [ ] **Build it cluster** names folders/files, sequences steps, includes ✅do/❌don't, and ends each step with verification (Rules 25, 27)
+- [ ] After this chapter, the mentee can **point at something new in the repo** or **demo something running** (Rule 23)
 - [ ] Edge cases thought through inside the prose
 - [ ] No solution code; the mentee builds only the right version
 
 ---
 
-*Ship guides where the mentee thinks, compares, reads, builds the right thing, and can explain it — taught in depth one rung at a time, the weak approach and the right one laid side by side, carrying the habits, the curiosity, and the mentee's own voice all the way up, not dumped as an internal form.*
+*Ship guides where the mentee thinks, compares, reads, builds the right thing, and can explain it — taught in depth one rung at a time, the weak approach and the right one laid side by side, **with a repo that keeps moving toward a finished app** — folder by folder, file by file, screen by screen — carrying the habits, the curiosity, and the mentee's own voice all the way up, not dumped as an internal form.*
